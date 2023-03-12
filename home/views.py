@@ -19,8 +19,8 @@ def getProducts(request):
 def getProduct(request, pk):
     product = None
     for i in products:
-        print(product)
         if i['_id'] == pk:
+            print(i)
             product = i
             break
     return Response(product)
