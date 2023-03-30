@@ -19,57 +19,70 @@ def addOrderItems(request):
     data = request.data
 
     orderItems = data['orderItems']
-    
+    # print('OrderItems : ',orderItems)
+    # orderItems = request.POST.get('orderItems', False)
+
     if orderItems and len(orderItems) == 0:
-        return Response({'detail' : 'No Order Items'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'detail': 'No Order Items'}, status=status.HTTP_400_BAD_REQUEST)
     else:
 
-        # (1) Create Order
-        
-        order = Order.objects.create(
-            user = user,
-            paymentMethod = data['paymentMethod'],
-            shippingPrice = data['shippingPrice'],
-            totalPrice = data['totalPrice'],
-        )
+        # (1) Create order
 
-        # (2) Create shipping adddress
+        order = Order.objects.create(
+            user=user,
+            paymentMethod=data['paymentMethod'],
+            shippingPrice=data['shippingPrice'],
+            totalPrice=data['totalPrice']
+        )
+        import ipdb; ipdb.set_trace()
+        # (2) Create shipping address
 
         shipping = ShippingAddress.objects.create(
-            order = order,
-            address = data['shippingAddress']['address'],
-            city = data['shippingAddress']['city'],
-            postalCode = data['shippingAddress']['postalCode'],
-            country = data['shippingAddress']['country'],
+            order=order,
+            address=data['shippingAddress']['address'],
+            city=data['shippingAddress']['city'],
+            postalCode=data['shippingAddress']['postalCode'],
+            country=data['shippingAddress']['country'],
         )
 
         # (3) Create order items adn set order to orderItem relationship
-
         for i in orderItems:
-            product = Product.objects.get(_id = i['product'])
+            product = Product.objects.get(_id=i['product'])
 
             item = OrderItem.objects.create(
-                product = product,
-                order = order,
-                name = product.name,  
-                # name = i[name]
-                qty = i['qty'],
-                price = i['price'],
-                image = product.image.url,
+                product=product,
+                order=order,
+                name=product.name,
+                qty=i['qty'],
+                price=i['price'],
+                image=product.image.url,
             )
 
             # (4) Update stock
 
-            product.countInStock -=item.qty
+            product.countInStock -= item.qty
             product.save()
 
         serializer = OrderSerializer(order, many=False)
         return Response(serializer.data)
 
-        
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def getOrderById(request, pk):
 
+    user = request.user
 
+    try:
+        order = Order.objects.get(_id=pk)
+        if user.is_staff or order.user == user:
+            serializer = OrderSerializer(order, many=False)
+            return Response(serializer.data)
+        else:
+            Response({'detail': 'Not authorized to view this order'},
+                     status=status.HTTP_400_BAD_REQUEST)
+    except:
+        return Response({'detail': 'Order does not exist'}, status=status.HTTP_400_BAD_REQUEST)
 
 
  
