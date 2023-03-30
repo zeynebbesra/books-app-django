@@ -21,6 +21,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         serializer = UserSerializerWithToken(self.user).data
         for k,v in serializer.items():
+            # import ipdb; ipdb.set_trace()
             data[k] = v
 
         return data

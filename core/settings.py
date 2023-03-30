@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'home.apps.HomeConfig',
     # 'rest_framework_simplejwt',
+    'django_pdb',
 ]
 
 
