@@ -9,8 +9,9 @@ from home.serializers import ProductSerializer, OrderSerializer
 
 
 from rest_framework import status
+from datetime import datetime
 # Create your views here.
-
+import ipdb
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -18,7 +19,11 @@ def addOrderItems(request):
     user = request.user
     data = request.data
 
+    # print('DATA : ',data)
     orderItems = data['orderItems']
+    # ipdb.set_trace()
+    # orderItems = data.get('orderItems', [])
+    
     # print('OrderItems : ',orderItems)
     # orderItems = request.POST.get('orderItems', False)
 
@@ -34,16 +39,17 @@ def addOrderItems(request):
             shippingPrice=data['shippingPrice'],
             totalPrice=data['totalPrice']
         )
-        import ipdb; ipdb.set_trace()
+        ipdb.set_trace()
         # (2) Create shipping address
 
         shipping = ShippingAddress.objects.create(
             order=order,
             address=data['shippingAddress']['address'],
-            city=data['shippingAddress']['city'],
+            city=data['shippignAddress']['city'],
             postalCode=data['shippingAddress']['postalCode'],
             country=data['shippingAddress']['country'],
         )
+        
 
         # (3) Create order items adn set order to orderItem relationship
         for i in orderItems:
@@ -69,6 +75,16 @@ def addOrderItems(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def getMyOrders(request):
+    user = request.user
+    orders = user.order_set.all()
+    serializer = OrderSerializer(orders, many=True)
+    return Response(serializer.data)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def getOrderById(request, pk):
 
     user = request.user
@@ -85,4 +101,13 @@ def getOrderById(request, pk):
         return Response({'detail': 'Order does not exist'}, status=status.HTTP_400_BAD_REQUEST)
 
 
- 
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateOrderToPaid(request, pk):
+    order = Order.objects.get(_id=pk)
+
+    order.isPaid = True
+    order.paidAt = datetime.now()
+    order.save()
+
+    return Response('Order was paid')
