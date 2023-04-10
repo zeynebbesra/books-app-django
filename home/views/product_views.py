@@ -30,35 +30,31 @@ def getProduct(request, pk):
 @permission_classes([IsAdminUser])
 def createProduct(request):
     user = request.user
+    data=request.data
     product = Product.objects.create(
         user=user,
-        name='Sample Name',
+        name=data['name'],
+        author=data['author'],
+        translator='Sample Name',
+        publisher='Sample Name',
         price=0,
         countInStock=0,
-        author='Sample Name',
-        publisher='Sample Name',
-        translator='Sample Name',
     )
     serializer = ProductSerializer(product, many=False)
     return Response(serializer.data)
 
-@api_view(['PUT'])
+
+@api_view(['PATCH'])
 @permission_classes([IsAdminUser])
 def updateProduct(request, pk):
     data=request.data
     product = Product.objects.get(_id=pk)
-
-    product.name=data['name']
-    product.author=data['author']
-    product.translator=data['translator']
-    product.publisher=data['publisher']
-    product.price=data['price']
-    product.countInStock=data['countInStock']
-
-    product.save()
-
-    serializer= ProductSerializer(product, many=False)
-    return Response(serializer.data)
+    serializer = ProductSerializer(product, data=data, partial = True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    
+    return Response(serializer.errors)
     
 
 @api_view(['DELETE'])
