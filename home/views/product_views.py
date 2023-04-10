@@ -77,4 +77,4 @@ def uploadImage(request):
 
     return Response('Image was uploaded')
     
-
+    
