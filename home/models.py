@@ -23,6 +23,7 @@ class Review(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=100, null=True, blank=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
     comment = models.TextField(null=True, blank=True)
     _id = models.AutoField(primary_key=True, editable=False)
 

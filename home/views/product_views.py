@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, permission_classes
 
-from home.models import Product
+from home.models import Product, Review
 from home.serializers import ProductSerializer
 
 
@@ -66,6 +66,7 @@ def deleteProduct(request,pk):
 
 
 @api_view(['POST'])
+@permission_classes([IsAdminUser])
 def uploadImage(request):
     data = request.data
 
@@ -77,4 +78,34 @@ def uploadImage(request):
 
     return Response('Image was uploaded')
     
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def createProductReview(request, pk):
+    user = request.user
+    product = Product.objects.get(_id=pk)
+    data = request.data
+
+    #1 - Review already exists
+    alreadyExists = product.review_set.filter(user=user).exists()
+    if alreadyExists:
+        content = {'details':'Product already reviewed'}
+        return Response(content, status=status.HTTP_409_CONFLICT)
+    
+    #2 - Create review
+    else:
+        review = Review.objects.create(
+            user=user,
+            product=product,
+            name=user.first_name,
+            comment=data['comment'],
+        )
+
+        reviews=product.review_set.all() #we're going to get all of the product review
+        product.numReviews = len(reviews) #we find out how many reviews the product has
+        product.save()
+
+        return Response('Review Added')
+
+
 
