@@ -92,6 +92,7 @@ def createProductReview(request, pk):
         content = {'details':'Product already reviewed'}
         return Response(content, status=status.HTTP_409_CONFLICT)
     
+    
     #2 - Create review
     else:
         review = Review.objects.create(
