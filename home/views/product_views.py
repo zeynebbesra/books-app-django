@@ -33,13 +33,19 @@ def getProducts(request):
     except EmptyPage:
         products = paginator.page(paginator.num_pages)
 
+    #İsteğin sayfa parametresi (page) kontrol edilir ve istek sayfasına göre ürünler belirlenir. 
+    #Eğer sayfa parametresi bir sayı değilse veya sayfa parametresi verilen sayfalar arasında değilse, ilk sayfa veya son sayfa kullanılır.
+
     if page == None:
         page = 1
 
+    import ipdb; ipdb.set_trace()
     page = int(page)
-    print('Page:', page)
+    
     serializer = ProductSerializer(products, many=True)
     return Response({'products': serializer.data, 'page': page, 'pages': paginator.num_pages})
+
+
 
 
 @api_view(['GET'])
