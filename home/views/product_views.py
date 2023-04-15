@@ -4,9 +4,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, permission_classes
 
-from home.models import Product
+from home.models import Product, Review
 from home.serializers import ProductSerializer
-
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from rest_framework import status
 # Create your views here.
@@ -14,9 +14,38 @@ from rest_framework import status
 
 @api_view(['GET'])
 def getProducts(request):
-    products = Product.objects.all()
+    query = request.query_params.get('keyword')
+    if query == None:   
+        query = ''
+    else:
+        query = query.lower()
+
+    products = Product.objects.filter(
+        name__icontains=query)
+
+    page = request.query_params.get('page')
+    paginator = Paginator(products, 3)
+
+    try:
+        products = paginator.page(page)
+    except PageNotAnInteger:
+        products = paginator.page(1)
+    except EmptyPage:
+        products = paginator.page(paginator.num_pages)
+
+    #İsteğin sayfa parametresi (page) kontrol edilir ve istek sayfasına göre ürünler belirlenir. 
+    #Eğer sayfa parametresi bir sayı değilse veya sayfa parametresi verilen sayfalar arasında değilse, ilk sayfa veya son sayfa kullanılır.
+
+    if page == None:
+        page = 1
+
+    import ipdb; ipdb.set_trace()
+    page = int(page)
+    
     serializer = ProductSerializer(products, many=True)
-    return Response(serializer.data)
+    return Response({'products': serializer.data, 'page': page, 'pages': paginator.num_pages})
+
+
 
 
 @api_view(['GET'])
@@ -66,6 +95,7 @@ def deleteProduct(request,pk):
 
 
 @api_view(['POST'])
+@permission_classes([IsAdminUser])
 def uploadImage(request):
     data = request.data
 
@@ -77,4 +107,36 @@ def uploadImage(request):
 
     return Response('Image was uploaded')
     
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def createProductReview(request, pk):
+    user = request.user
+    product = Product.objects.get(_id=pk)
+    data = request.data
+
+    #1 - Review already exists
+    alreadyExists = product.review_set.filter(user=user).exists()
+    if alreadyExists:
+        content = {'details':'Product already reviewed'}
+        return Response(content, status=status.HTTP_409_CONFLICT)
     
+    
+    #2 - Create review
+    else:
+        review = Review.objects.create(
+            user=user,
+            product=product,
+            name=user.first_name,
+            comment=data['comment'],
+        )
+
+        reviews=product.review_set.all() #we're going to get all of the product review
+        product.numReviews = len(reviews) #we find out how many reviews the product has
+        product.save()
+
+        return Response('Review Added')
+
+
+
+
