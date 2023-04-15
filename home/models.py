@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 class Product(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=100, null=True, blank=True)
-    image = models.ImageField(null=True, blank=True, default='/placeholder.jpg')
+    image = models.ImageField(null=True, blank=True)
     author = models.CharField(max_length=100, null=True, blank=True)
     publisher = models.CharField(max_length=100, null=True, blank=True)
     translator = models.CharField(max_length=100, null=True, blank=True)
@@ -63,7 +63,7 @@ class ShippingAddress(models.Model):
     city = models.CharField(max_length=200, null=True, blank=True)
     postalCode = models.CharField(max_length=200, null=True, blank=True)
     country = models.CharField(max_length=200, null=True, blank=True)
-    shippingPrice = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
+    shippinPrice = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
     _id = models.AutoField(primary_key=True, editable=False)
 
     def __str__(self):
