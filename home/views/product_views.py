@@ -39,7 +39,7 @@ def getProducts(request):
     if page == None:
         page = 1
 
-    import ipdb; ipdb.set_trace()
+    # import ipdb; ipdb.set_trace()
     page = int(page)
     
     serializer = ProductSerializer(products, many=True)
