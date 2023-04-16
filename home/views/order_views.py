@@ -18,15 +18,9 @@ import ipdb
 def addOrderItems(request):
     user = request.user
     data = request.data
-
-    # print('DATA : ',data)
-    orderItems = data['orderItems']
-    # ipdb.set_trace()
-    # orderItems = data.get('orderItems', [])
     
-    # print('OrderItems : ',orderItems)
-    # orderItems = request.POST.get('orderItems', False)
-
+    orderItems = data['orderItems']
+    
     if orderItems and len(orderItems) == 0:
         return Response({'detail': 'No Order Items'}, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -45,7 +39,7 @@ def addOrderItems(request):
         shipping = ShippingAddress.objects.create(
             order=order,
             address=data['shippingAddress']['address'],
-            city=data['shippignAddress']['city'],
+            city=data['shippingAddress']['city'],
             postalCode=data['shippingAddress']['postalCode'],
             country=data['shippingAddress']['country'],
         )
@@ -83,6 +77,15 @@ def getMyOrders(request):
     serializer = OrderSerializer(orders, many=True)
     return Response(serializer.data)
 
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def getOrders(request):
+    orders = Order.objects.all()
+    serializer = OrderSerializer(orders, many=True)
+    return Response(serializer.data)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def getOrderById(request, pk):
@@ -111,3 +114,15 @@ def updateOrderToPaid(request, pk):
     order.save()
 
     return Response('Order was paid')
+
+
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def updateOrderToDelivered(request, pk):
+    order = Order.objects.get(_id=pk)
+
+    order.isDelivered = True
+    order.deliveredAt = datetime.now()
+    order.save()
+
+    return Response('Order was delivered')
