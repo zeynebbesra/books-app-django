@@ -8,7 +8,7 @@ from django.utils import timezone
 class Product(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     name = models.CharField(max_length=100, null=True, blank=True)
-    image = models.ImageField(null=True, blank=True)
+    image = models.ImageField(null=True, blank=True, default='/placeholder.png')
     author = models.CharField(max_length=100, null=True, blank=True)
     publisher = models.CharField(max_length=100, null=True, blank=True)
     translator = models.CharField(max_length=100, null=True, blank=True)
@@ -60,6 +60,7 @@ class OrderItem(models.Model):
         return str(self.name)
     
 class ShippingAddress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     order = models.OneToOneField(Order, on_delete=models.CASCADE, null=True, blank=True)
     address = models.CharField(max_length=200, null=True, blank=True)
     city = models.CharField(max_length=200, null=True, blank=True)

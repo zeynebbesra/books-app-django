@@ -18,22 +18,31 @@ import ipdb
 def addOrderItems(request):
     user = request.user
     data = request.data
-    
+
     orderItems = data['orderItems']
     
     if orderItems and len(orderItems) == 0:
         return Response({'detail': 'No Order Items'}, status=status.HTTP_400_BAD_REQUEST)
     else:
 
-        # (1) Create order
+        # Calculate total price
 
+        itemsPrice = 0
+        for i in orderItems:
+            product = Product.objects.get(_id=i['product'])
+            itemsPrice += product.price * i['qty']
+        shippingPrice= 10
+        totalPrice = itemsPrice + shippingPrice
+
+        # (1) Create order
+        
         order = Order.objects.create(
             user=user,
             paymentMethod=data['paymentMethod'],
-            shippingPrice=data['shippingPrice'],
-            totalPrice=data['totalPrice']
+            shippingPrice=shippingPrice,
+            totalPrice=totalPrice
         )
-        ipdb.set_trace()
+        
         # (2) Create shipping address
 
         shipping = ShippingAddress.objects.create(
@@ -44,19 +53,18 @@ def addOrderItems(request):
             country=data['shippingAddress']['country'],
         )
         
-
-
-
         # (3) Create order items adn set order to orderItem relationship
+        
         for i in orderItems:
             product = Product.objects.get(_id=i['product'])
-
+        
             item = OrderItem.objects.create(
+                
                 product=product,
                 order=order,
                 name=product.name,
                 qty=i['qty'],
-                price=i['price'],
+                price=product.price,
                 image=product.image.url,
             )
 
