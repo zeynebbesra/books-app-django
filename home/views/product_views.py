@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, permission_classes
 
-from home.models import Product, Review
+from home.models import Product, Review, Order
 from home.serializers import ProductSerializer
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -18,7 +18,7 @@ def getProducts(request):
     if query == None:   
         query = ''
     else:
-        query = query.lower()
+        query = query.lower()   #arama sorgusu ne şekilde girilirse girilsin, büyük veya küçük harfle, veritabanında yapılan sorgulama işlemi sırasında harf duyarlılığı engellenir.
 
     products = Product.objects.filter(
         name__icontains=query)
@@ -114,6 +114,11 @@ def createProductReview(request, pk):
     user = request.user
     product = Product.objects.get(_id=pk)
     data = request.data
+    order = Order.objects.get(_id=data['order_id'])
+
+    if not order.isDelivered:
+        content = {'details': 'Order has not been delivered yet'}
+        return Response(content, status=status.HTTP_400_BAD_REQUEST)
 
     #1 - Review already exists
     alreadyExists = product.review_set.filter(user=user).exists()
@@ -123,6 +128,7 @@ def createProductReview(request, pk):
     
     
     #2 - Create review
+    
     else:
         review = Review.objects.create(
             user=user,
@@ -138,5 +144,9 @@ def createProductReview(request, pk):
         return Response('Review Added')
 
 
-
-
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def deleteReview(request,pk):
+    product = Review.objects.get(_id=pk)
+    product.delete()
+    return Response('Review Deleted')
